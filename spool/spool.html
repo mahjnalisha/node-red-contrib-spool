@@ -3,7 +3,10 @@
         category: 'function',
         color: '#a6bbcf',
         defaults: {
-            name: {value:""}
+            name: {value:""},
+            filename:{value:""},
+           //brokerstatus:{value:""}
+           // filelocation:{value:""}
         },
         inputs:1,
         outputs:1,
@@ -26,10 +29,11 @@
 		<option>Broker 2</option>
 		</select>
     </div>
-	<div class="form-row">
-        <label for="node-input-name"><i class="icon-tag"></i> Spool File Location</label>
-        <input type="text" id="node-input-name" placeholder="Name">
+    <div class="form-row">
+        <label for="node-input-name"><i class="icon-tag"></i> Spool File Name</label>
+        <input type="text" id="node-input-filename" placeholder="Name">
     </div>
+
 	<div class="form-row">
         <label for="node-input-name"><i class="icon-tag"></i> Tip:</label>
        <small>Tip test for spool node</small>
