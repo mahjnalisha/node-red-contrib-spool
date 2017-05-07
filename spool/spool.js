@@ -1,5 +1,6 @@
 module.exports = function(RED) {
     var fs=require('fs');
+
     function SpoolNode(n) {
         RED.nodes.createNode(this,n);
         this.filename = n.filename || "";
@@ -27,9 +28,52 @@ module.exports = function(RED) {
             });
         }
 
- 
+//input function
         this.on('input', function(msg) {
-            fs.appendFileSync(this.filename,msg.payload);
+
+            var context = this.context();
+            var count = context.get('count') || 0;
+            context.stat=context.stat|| "";
+            context.msg=context.msg||""
+            // msg.status="no connection";
+
+            //if(msg.topic==='testtopic22') {
+            context.msg = msg.payload;
+            //console.log("inside topic");
+
+            //}
+
+
+            context.stat=msg.status;
+            if(context.stat != undefined && context.stat.text=="node-red:common.status.connected")
+            {
+                console.log("nn");
+                node.send(msg);
+
+            }
+            else
+            {
+                console.log(count);
+                if(count==0) {
+                    console.log("no write");
+                    fs.appendFileSync(this.filename, context.msg);
+                    // console.log(context.stat.text);
+                    // console.log(context.msg.id);
+
+                    // console.log(context.stat);
+
+                }
+
+
+                count += 1;
+                context.set('count',count);
+
+
+
+            }
+
+
+
             node.send(msg);
         });
     }
