@@ -27,7 +27,7 @@ module.exports = function(RED) {
             });
         }
 
-
+ 
         this.on('input', function(msg) {
             fs.appendFileSync(this.filename,msg.payload);
             node.send(msg);
