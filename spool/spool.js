@@ -1,6 +1,5 @@
 module.exports = function(RED) {
     var fs=require('fs');
-
     function SpoolNode(n) {
         RED.nodes.createNode(this,n);
         this.filename = n.filename || "";
@@ -28,35 +27,9 @@ module.exports = function(RED) {
             });
         }
 
-//input function
+
         this.on('input', function(msg) {
-
-            var context = this.context();
-            var count = context.get('count') || 0;
-            context.stat=context.stat|| "";
-            context.msg=context.msg||""
-
-            context.msg = msg.payload;
-
-            context.stat=msg.status;
-            if(context.stat != undefined && context.stat.text=="node-red:common.status.connected")
-            {
-                console.log("nn");
-                node.send(msg);
-
-            }
-            else
-            {
-                console.log(count);
-                if(count==0) {
-                    console.log("no write");
-                    fs.appendFileSync(this.filename, msg.payload);
-
-                }
-                count += 1;
-                context.set('count',count);
-            }
-
+            fs.appendFileSync(this.filename,msg.payload);
             node.send(msg);
         });
     }
