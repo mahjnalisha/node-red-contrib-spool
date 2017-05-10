@@ -83,6 +83,7 @@ module.exports = function(RED) {
                     }
 
                 }).on('close', function() {
+
                 });
 
                 function deleteSelectedLine(arrfile)
