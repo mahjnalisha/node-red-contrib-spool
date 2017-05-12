@@ -1,6 +1,19 @@
 module.exports = function(RED) {
     var fs=require('fs');
+    var     readline = require('readline');
 
+    var countline =0;
+    const sqlite = require('sqlite3');
+
+  //  var db = new sqlite.Database('./test.db');
+    var sqlite3 = require('sqlite3').verbose();
+    var db = new sqlite3.Database('./spool.db');
+
+    db.serialize(function() {
+        db.run("CREATE TABLE IF NOT EXISTS spool_messages (id INTEGER PRIMARY KEY AUTOINCREMENT, topic text, message TEXT, message_id TEXT)");
+
+
+    });
 
     function SpoolNode(n) {
         RED.nodes.createNode(this,n);
@@ -8,110 +21,87 @@ module.exports = function(RED) {
         this.loadedScript = '';
         this.loadedFilename = '';
         this.loadedbrokerstatus = '';
-        var context = this.context();
+
         var node = this;
-        var lineArr=[];
-        // Read and file when node is initialized,
+        var context=this.context();
+        var rd="";
 
-        if (this.filename !== '') {
-            node.loadedFilename = this.filename;
+     //   var db = new sqlite.Database();
 
+// open the database for reading if file exists
+// create new database file if not
 
-            fs.readFile(this.filename, {encoding: 'utf-8'}, function (err, fileContent) {
-
-                if (err) {
-                    if (err.code === 'ENOENT') {
-                        node.warn('Could not find file "' + err.path + '". Hint: File path is relative to "' + process.env.PWD + '"');
-                    } else {
-                        node.warn(err);
-                    }
-                } else {
-                    node.loadedScript = fileContent;
-                }
-            });
-        }
-
-        // node.on('close', function (done) {
-        //     node.status({});
-        //     done();
-        // });
-//input function
 
         this.on('input', function(msg) {
+          var brokerstat="";
+            node.loadedbrokerstatus =node.loadedbrokerstatus|| msg.status;
 
-            var count =  0;
-            context.stat=SpoolNode.stat||msg.status;
-            if(SpoolNode.stat!==msg.status && msg.status!=undefined)
+            if(node.loadedbrokerstatus!=undefined && node.loadedbrokerstatus!="disconnected" )
             {
-                context.stat=msg.status;
-            }
+                console.log(node.loadedbrokerstatus.text);
+                switch(node.loadedbrokerstatus.text){
+                    case "node-red:common.status.connected": {
+                        brokerstat = 'online';
+                        break;
+                    }
+                    case "common.status.connected": {
+                        brokerstat = 'online';
+                        break;
 
-            context.msg=context.msg||"";
-            context.msg = msg.payload;
-            console.log("status1:"+context.stat.text);
-            //context.stat=msg.status;
-            SpoolNode.stat=context.stat;
-            var statusCheck=SpoolNode.stat;
-
-            console.log("status2:"+context.stat.text);
-            if(context.stat !== undefined && context.stat.text==="node-red:common.status.connected")
-            {     var lineRemove='';
-                  var lcnt=0;
-                var wholeFile= fs.readFileSync(node.loadedFilename, 'utf8');
-                var arrFile=wholeFile.split("\n");
-                //prepare file for reading only if file has contents
-                var lineReader = require('readline').createInterface({
-                    input: require('fs').createReadStream(this.filename)
-
-                });
-                lineReader.on('line', function (line) {
-                    if(line!="") {
-                        lcnt++;
-                        console.log('Line from file:', line);
-
-                        node.send({payload: line});
-
-                        //if(lcnt<3)
-                       //{
-                            lineRemove+= line.substring(line.indexOf("\n") + 1)+"\n";
-                            if(lineRemove!="") {
-                                arrFile.splice(0, 1);
-                                deleteSelectedLine(arrFile);
-                            }
-
-                        //}
+                    }
+                    default: {
+                        brokerstat = "offline";
+                        break;
                     }
 
-                }).on('close', function() {
-
-                });
-
-                function deleteSelectedLine(arrfile)
-                {
-                    //console.log(arrFile[]);
-                    var strFile= arrFile.join("\n");
-                    fs.writeFileSync(node.loadedFilename, strFile+'\n');
-
-                }
-            }
-            else if(context.msg!=undefined)
-            {
-                console.log(count);
-                if(count===0) {
-                    console.log("no write");
-                    fs.appendFileSync(this.filename, msg.payload+'\n');
                 }
 
+                //node.loadedbrokerstatus="connected";
+                console.log("connected"+brokerstat);
 
-                count += 1;
-                context.set('count',count);
+            }else{
+                //console.log("disconnected");
+               // brokerstat='offline';
+                node.loadedbrokerstatus="disconnected";
+
+            }
+           // console.log(node.loadedbrokerstatus);
+            if(msg.status!=undefined) {
+              console.log("");
+            }else {
+                context.data =  msg;
+            }
+            console.log(context.data);
+            if(context.data!="" && context.data!=undefined){
+                if(brokerstat=='online'){
+                    node.send(context.data);
+                }else {
+                    i = 0;
+                    var obj = JSON.stringify(context.data);
+                    var topic= JSON.stringify(context.data.topic);
+                    var message_id=JSON.stringify(context.data._msgid);
+                    var message=JSON.stringify(context.data.payload);
+                    //console.log(message);
+                   var stmt = db.prepare("INSERT INTO spool_messages(topic, message, message_id) VALUES (?,?,?)");
+                    //for (var i = 0; i < 10; i++) {
+                       stmt.run(JSON.stringify(context.data.topic),JSON.stringify(context.data.payload),JSON.stringify(context.data._msgid));
+                   // }
+                    stmt.finalize();
+
+                   db.each("SELECT * from spool_messages", function(err, row) {
+                       console.log(row);
+                    });
+                  //  fs.appendFileSync("test.txt", obj);
+                }
             }
 
-
-            context.set('context.stat',SpoolNode.stat);
-            node.send(msg);
         });
+
     }
+
+
+
+
 
     RED.nodes.registerType("spool",SpoolNode);
     RED.library.register("functions");
