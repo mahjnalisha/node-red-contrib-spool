@@ -17,8 +17,8 @@ module.exports = function(RED) {
         db.run("CREATE TABLE if not exists spool_messages (id integer primary key autoincrement,message_id text,message TEXT, topic text)");
 
 
-        //noinspection JSAnnotator
-        this.on('input', function (msg) {
+
+        this.on('input', function ( msg) {
             var brokerStatus = "";
             context.stat = SpoolNode.stat || msg.status;
             console.log("spool node connection:" + SpoolNode.stat.text);
