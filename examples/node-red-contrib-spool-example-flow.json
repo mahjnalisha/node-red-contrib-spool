@@ -1,0 +1,119 @@
+[
+  {
+    "id": "6be7c8e.21b4038",
+    "type": "mqtt out",
+    "z": "a6602864.4eb4e8",
+    "name": "MQTT",
+    "topic": "testtopic22",
+    "qos": "2",
+    "retain": "",
+    "broker": "649c3c57.3d0c34",
+    "x": 583,
+    "y": 54,
+    "wires": []
+  },
+  {
+    "id": "cc50078f.2699e8",
+    "type": "status",
+    "z": "a6602864.4eb4e8",
+    "name": "Broker Status",
+    "scope": [
+      "6be7c8e.21b4038"
+    ],
+    "x": 141,
+    "y": 56,
+    "wires": [
+      [
+        "f264bd5.4f4444"
+      ]
+    ]
+  },
+  {
+    "id": "f264bd5.4f4444",
+    "type": "spool",
+    "z": "a6602864.4eb4e8",
+    "name": "spool",
+    "filename": "test11.txt",
+    "x": 410,
+    "y": 40,
+    "wires": [
+      [
+        "6be7c8e.21b4038"
+      ]
+    ]
+  },
+  {
+    "id": "6c28d6d5.439db8",
+    "type": "serial in",
+    "z": "a6602864.4eb4e8",
+    "name": "Serial Output Device",
+    "serial": "5d2f366b.ca50c8",
+    "x": 174,
+    "y": 141,
+    "wires": [
+      [
+        "f264bd5.4f4444"
+      ]
+    ]
+  },
+  {
+    "id": "2cb9c79e.45adf8",
+    "type": "mqtt in",
+    "z": "a6602864.4eb4e8",
+    "name": "MQTT ",
+    "topic": "testtopic22",
+    "qos": "2",
+    "broker": "649c3c57.3d0c34",
+    "x": 251,
+    "y": 349,
+    "wires": [
+      [
+        "cb65fe72.ad875"
+      ]
+    ]
+  },
+  {
+    "id": "cb65fe72.ad875",
+    "type": "debug",
+    "z": "a6602864.4eb4e8",
+    "name": "",
+    "active": true,
+    "console": "false",
+    "complete": "payload",
+    "x": 461,
+    "y": 352,
+    "wires": []
+  },
+  {
+    "id": "649c3c57.3d0c34",
+    "type": "mqtt-broker",
+    "z": "",
+    "broker": "broker.mqttdashboard.com",
+    "port": "1883",
+    "clientid": "clientId-wtNRFyVBOd",
+    "usetls": false,
+    "compatmode": true,
+    "keepalive": "60",
+    "cleansession": true,
+    "willTopic": "",
+    "willQos": "0",
+    "willPayload": "",
+    "birthTopic": "",
+    "birthQos": "0",
+    "birthPayload": ""
+  },
+  {
+    "id": "5d2f366b.ca50c8",
+    "type": "serial-port",
+    "z": "",
+    "serialport": "COM1",
+    "serialbaud": "9600",
+    "databits": "8",
+    "parity": "none",
+    "stopbits": "1",
+    "newline": "\\n",
+    "bin": "false",
+    "out": "char",
+    "addchar": true
+  }
+]
