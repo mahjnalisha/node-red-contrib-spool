@@ -16,15 +16,18 @@
   "keywords": [
     "spool"
   ],
-  "node-red"     : {
-        "nodes": {
-            "spool": "spool/spool.js"
-        }
-    },
+  "node-red": {
+    "nodes": {
+      "spool": "spool/spool.js"
+    }
+  },
   "author": "alsaanishanita",
-  "license": "ISC",
+  "license": "GPLv3",
   "bugs": {
     "url": "https://github.com/mahjnalisha/node-red-contrib-spool/issues"
   },
-  "homepage": "https://github.com/mahjnalisha/node-red-contrib-spool#readme"
+  "homepage": "https://github.com/mahjnalisha/node-red-contrib-spool#readme",
+  "dependencies": {
+    "sqlite3": "^3.1.8"
+  }
 }
