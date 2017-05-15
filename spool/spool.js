@@ -3,103 +3,157 @@ module.exports = function(RED) {
 
 
     function SpoolNode(n) {
-        RED.nodes.createNode(this,n);
+        RED.nodes.createNode(this, n);
         this.filename = n.filename || "";
         this.loadedScript = '';
         this.loadedFilename = '';
-        this.loadedbrokerstatus = '';
+        SpoolNode.stat = '';
         var context = this.context();
         var node = this;
-        // Read and file when node is initialized,
-
-        if (this.filename !== '') {
-            node.loadedFilename = this.filename;
+        var sqlite3 = require('sqlite3');
+        var db = new sqlite3.Database('./SpoolDB.db');
 
 
-            fs.readFile(this.filename, {encoding: 'utf-8'}, function (err, fileContent) {
+        db.run("CREATE TABLE if not exists spool_messages (id integer primary key autoincrement,message_id text,message TEXT, topic text)");
 
-                if (err) {
-                    if (err.code === 'ENOENT') {
-                        node.warn('Could not find file "' + err.path + '". Hint: File path is relative to "' + process.env.PWD + '"');
-                    } else {
-                        node.warn(err);
+
+        //noinspection JSAnnotator
+        this.on('input', function (msg) {
+            var brokerStatus = "";
+            context.stat = SpoolNode.stat || msg.status;
+            console.log("spool node connection:" + SpoolNode.stat.text);
+            //console.log("msg status connection"+msg.status.text);
+            if (SpoolNode.stat !== msg.status && msg.status != undefined) {
+                context.stat = msg.status;
+            }
+            else
+                context.stat = SpoolNode.stat;
+            if (msg.status !== undefined) {
+
+            }
+
+            else {
+                context.data = msg;
+                console.log("data context from" + JSON.stringify(context.data) + '\n');
+            }
+            console.log("context status" + context.stat.text + '\n');
+
+
+            if (context.stat != undefined) {
+
+                switch (context.stat.text) {
+                    case "node-red:common.status.connected": {
+                        brokerStatus = 'online';
+                        SpoolNode.stat = context.stat;
+                        break;
                     }
-                } else {
-                    node.loadedScript = fileContent;
+                    case "common.status.connected": {
+                        brokerStatus = 'online';
+                        SpoolNode.stat = context.stat;
+                        break;
+
+                    }
+                    default: {
+                        brokerStatus = "offline";
+                        SpoolNode.stat = context.stat;
+
+                        break;
+                    }
+
+                }
+            } else {
+                //console.log("disconnected");
+                brokerStatus = 'offline';
+                SpoolNode.stat = context.stat;
+
+
+            }
+
+
+            console.log("status od broker" + brokerStatus);
+
+
+            if (brokerStatus == 'online') {
+                console.log("select from dtatabase and send data to the mqtt");
+                select();
+                function select(callback) {
+                    var query = "SELECT * from spool_messages LIMIT 1";
+
+                    db.all(query, function (err, rows) {
+                        console.log(rows.length);
+                        if (rows.length > 0) {
+                            rows.forEach(function (row) {
+                                if (err) {
+                                    console.log("Error");
+                                }
+                                else {
+                                    console.log("this is message");
+                                    console.log(row.id, row.message);
+                                    context.data = "";
+
+                                   // context.data = row.message;
+                                    var message=row.message;
+                                    console.log(message);
+                                    var msg = {payload: message};
+                                    node.send(msg);
+                                    deleteMessage(row);
+                                }
+                            });
+                            return callback()
+
+                        }
+                    });
+
+
+                    function callback() {
+                        setTimeout(function () {
+                            console.log("in callback");
+
+
+                            select(callback);
+                        }, 1000);
+                    }
+
+
+                    if (context.data !== undefined) {
+                        console.log("if context .data is defined, write in the mqtt" + JSON.stringify(context.data));
+                        var msg = {payload: context.data.payload};
+                        node.send(msg);
+                        context.data = "";
+                    }
+                }
+            }
+
+            else if (brokerStatus == 'offline') {
+                if (context.data != "" && context.data != undefined) {
+
+
+                    console.log("if connecting store in database");
+                    console.log("while not connecting");
+                    console.log(JSON.stringify(context.data.payload));
+
+                    var stmt = db.prepare("INSERT INTO spool_messages (topic,message,message_id) VALUES (?,?,?)");
+                    stmt.run(JSON.stringify(context.data.topic), JSON.stringify(context.data.payload), JSON.stringify(context.data._msgid));
+
+                    stmt.finalize();
+                    context.data = undefined;
+                }
+            }
+            context.set('context.stat', SpoolNode.stat);
+            // node.send(msg);
+        });
+        function deleteMessage(message) {
+            db.run("DELETE FROM spool_messages WHERE id=(?)", message.id, function (err) {
+                if (err) {
+                    console.error(err);
+                }
+                else {
+                    console.log(" delete Successful");
+                    context.data=undefined;
                 }
             });
         }
-
-        // node.on('close', function (done) {
-        //     node.status({});
-        //     done();
-        // });
-//input function
-
-        this.on('input', function(msg) {
-
-
-            var count =  0;
-            context.stat=SpoolNode.stat||msg.status;
-            if(SpoolNode.stat!==msg.status && msg.status!=undefined)
-            {
-                context.stat=msg.status;
-            }
-
-
-            context.msg=context.msg||"";
-            context.msg = msg.payload;
-            console.log("status1:"+context.stat.text);
-            //context.stat=msg.status;
-            SpoolNode.stat=context.stat;
-            var statusCheck=SpoolNode.stat;
-
-           console.log("status2:"+context.stat.text);
-            //console.log("status:"+msg.status.source.type);
-
-            if(context.stat !== undefined && context.stat.text==="node-red:common.status.connected")
-            {console.log("not wrtten");
-                var lineReader = require('readline').createInterface({
-                    input: require('fs').createReadStream('test.txt')
-
-                });
-
-                lineReader.on('line', function (line) {
-
-                    console.log('Line from file:', line);
-                    node.send({payload:line});
-
-                });
-
-            }
-            else if(context.msg!=undefined)
-            {
-                console.log(count);
-                if(count===0) {
-                    console.log("no write");
-                    fs.appendFileSync(this.filename, msg.payload+'\r\n');
-                    // console.log(context.stat.text);
-                    // console.log(context.msg.id);
-
-                    // console.log(context.stat);
-
-                }
-
-
-                count += 1;
-                context.set('count',count);
-
-
-
-            }
-
-
-    context.set('context.stat',SpoolNode.stat);
-            node.send(msg);
-        });
     }
-
-
 
     RED.nodes.registerType("spool",SpoolNode);
     RED.library.register("functions");
