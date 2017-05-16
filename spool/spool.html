@@ -4,7 +4,7 @@
         color: '#a6bbcf',
         defaults: {
             name: {value:""},
-            filename:{value:""},
+           // filename:{value:""},
            //brokerstatus:{value:""}
            // filelocation:{value:""}
         },
@@ -13,7 +13,9 @@
         icon: "file.png",
         label: function() {
             return this.name||"spool";
-        }
+        },
+        info:"abc"
+
     });
 </script>
 
@@ -22,17 +24,8 @@
         <label for="node-input-name"><i class="icon-tag"></i> Name</label>
         <input type="text" id="node-input-name" placeholder="Name">
     </div>
-	<div class="form-row">
-        <label for="node-input-name"><i class="icon-tag"></i> MQTT Broker</label>
-        <select id="node-input-broker">
-		<option>Broker 1</option>
-		<option>Broker 2</option>
-		</select>
-    </div>
-    <div class="form-row">
-        <label for="node-input-name"><i class="icon-tag"></i> Spool File Name</label>
-        <input type="text" id="node-input-filename" placeholder="Name">
-    </div>
+
+
 
 	<div class="form-row">
         <label for="node-input-name"><i class="icon-tag"></i> Tip:</label>
@@ -41,5 +34,7 @@
 </script>
 
 <script type="text/x-red" data-help-name="spool-node">
+<div class="form-row">
     <p>A node to store and deliver the undeliver messages.</p>
 </script>
+
