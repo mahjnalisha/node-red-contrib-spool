@@ -13,7 +13,7 @@ module.exports = function(RED) {
         var db = new sqlite3.Database('./SpoolDB.db');
 
         //create table if it does not already exists
-        db.run("CREATE TABLE if not exists spool_messages (id integer primary key autoincrement,message_id text,message TEXT, topic text)");
+        db.run("CREATE TABLE if not exists spool_messages (id integer primary key autoincrement,message TEXT)");
 
         //executes while it receive the input from other nodes or database
         this.on('input', function ( msg) {
@@ -70,7 +70,7 @@ module.exports = function(RED) {
                 //method with callback to execute retrieval and deletion of messages from the database after it is sent
                 function select(callback) {
 
-                    var query = "SELECT * from spool_messages LIMIT 1"; //retrieve n number of data in single call
+                    var query = "SELECT * from spool_messages ORDER BY id ASC LIMIT 1000 "; //retrieve n number of data in single call
 
                     db.all(query, function (err, rows) {
 
@@ -82,10 +82,10 @@ module.exports = function(RED) {
                                 }
                                 else {
                                    // console.log("this is message");
-                                    //console.log(row.id, row.message);
+                                    console.log(row.id, row.message);
                                     context.data = ""; //reset context.data
 
-                                    var message=row.message;
+                                    var message=JSON.parse(row.message);
                                     //console.log(message);
                                     var msg = {payload: message}; //set the message to payload
                                     console.log("send from database");
@@ -106,14 +106,13 @@ module.exports = function(RED) {
 
 
                             select(callback);
-                        }, 1000);
+                        }, 250);
                     }
 
                     // check if a message from the serial output device is valid
                     if (context.data !== undefined && context.data!=="" ) {
 
-                        var msg1=context.data.payload.toString();
-                        var msg = {payload: msg1}; // assign each output message to payload
+                        var msg = {payload: context.data}; // assign each output message to payload
                         node.send(msg); //send the message to broker
                         context.data = ""; //reset context.data
                     }
@@ -126,8 +125,8 @@ module.exports = function(RED) {
 
                     console.log("if connecting store in database");
                     //prepare insert query to insert each message to database
-                    var stmt = db.prepare("INSERT INTO spool_messages (topic,message,message_id) VALUES (?,?,?)");
-                    stmt.run(JSON.stringify(context.data.topic), JSON.stringify(context.data.payload.toString()), JSON.stringify(context.data._msgid));
+                    var stmt = db.prepare("INSERT INTO spool_messages (message) VALUES (?)");
+                    stmt.run(JSON.stringify(context.data));
 
                     stmt.finalize(); //data inserted
 
