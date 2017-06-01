@@ -9,10 +9,11 @@ It is relatively easy to install on different operating system such as Linux, Wi
 #### Installation
 Install node-red-contrib-spool by following the instructions 
 
+```javascript
 > cd $HOME/.node-red
 
-> npm install node-red-contrib-spool
-
+> npm install @aansi/spool
+```
 Or
 You can follow the adding nodes instructions from the [Node-RED Getting Started Documentation][1].
 
