@@ -28,6 +28,8 @@
   },
   "homepage": "https://github.com/mahjnalisha/node-red-contrib-spool#readme",
   "dependencies": {
-    "sqlite3": "^3.1.8"
+    "sqlite3": "^3.1.8",
+    "@aansi/spool": "^1.0.0"
+    
   }
 }
